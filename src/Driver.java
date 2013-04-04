@@ -27,6 +27,7 @@ public class Driver {
 	
 		String s;
 		int prevGroupID = -1, currentGroupID = -1;
+		int prev_s = -1, curr_s = -1;
 		int sentiScore = -5;
 		String rating = null;
 		List<String> words_list;
@@ -52,6 +53,9 @@ public class Driver {
 				
 				if(isNewReview){
 					currentGroupID = 0;
+					curr_s = 6;
+					Preprocessor.addsentiTransition(prev_s, curr_s);
+					prev_s = 6;
 					sentiScore = -5;
 					rating = s.substring(s.indexOf('/')+1 ,s.indexOf(']'));
 					scores = new ArrayList<Integer>();
@@ -67,6 +71,9 @@ public class Driver {
 				if(isNewPara){
 					s = s.substring(3);
 //					GroupProcessing.addTransition(prevGroupID, 1);
+					curr_s = 5;
+					Preprocessor.addsentiTransition(prev_s, curr_s);
+					prev_s = 5;
 					prevGroupID = 1;
 					isNewPara = false;
 				}
@@ -79,14 +86,17 @@ public class Driver {
 //					s = preproc.removeStopwords(s);
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
 //					GroupProcessing.addTransition(prevGroupID, currentGroupID);
-					words_list = lemmatizer.lemmatize(s);
-					words_array = s.split(" ");
-					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
+//					words_list = lemmatizer.lemmatize(s);
+//					words_array = s.split(" ");
+//					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
+					curr_s = sentiScore + 2;
+					Preprocessor.addsentiTransition(prev_s, curr_s);
 //					System.out.println(s);
 				}
 							
 //				prevGroupID = currentGroupID;
+				prev_s = curr_s;
 			}
 		}
 		catch(Exception e)
@@ -104,7 +114,8 @@ public class Driver {
 		Driver driver = new Driver();
 //		driver.readTrainingFile("sample_train.txt");
 		driver.readTrainingFile("DennisSchwartz_train.txt");
-		Preprocessor.printSentiDistroByWord();
+//		Preprocessor.printSentiDistroByWord();
+		Preprocessor.printSentiTransition();
 //		Preprocessor.printSentiDistroByRating();
 		//driver.readTestFileAndProcess("DennisSchwartz_test.txt");
 	}

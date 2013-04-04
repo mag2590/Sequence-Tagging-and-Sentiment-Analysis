@@ -15,11 +15,36 @@ public class Preprocessor {
 	HashSet<String> stopWords;
 	static TreeMap<String, int[]> wordSentiDistro = new TreeMap<String, int[]>();
 	static HashMap<String, int[]> ratingSentiDistro = new HashMap<String, int[]>();
+	static int[][] sentiTransition;
 	
 	public Preprocessor(){
 		
+		sentiTransition = new int[7][7];
 		loadStopwordsList();
 	}
+	
+	public static void addsentiTransition(int i, int j){
+		
+		if(i>=0 && j>=0)
+		sentiTransition[i][j]++;
+	}
+	
+	public static void printSentiTransition(){
+		
+		StringBuffer sb;
+		for(int i = 0; i < 7; i++){
+			
+			sb = new StringBuffer();
+			for(int j = 0; j < 7 ; j++){
+				
+				sb.append(sentiTransition[i][j] + "\t");
+			}
+			
+			System.out.println(sb.toString());
+		}
+			
+	}
+	
 	
 	public void loadStopwordsList() {
 		stopWords = new HashSet<String>();
