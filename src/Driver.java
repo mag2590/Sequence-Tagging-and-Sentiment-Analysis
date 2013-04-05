@@ -1,8 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-
 
 public class Driver {
 
@@ -11,9 +11,11 @@ public class Driver {
 	GroupProcessing grpProc;
 	Preprocessor preproc;
 	StanfordLemmatizer lemmatizer;
+	POSTagging posTagger;
 	
 	boolean isNewPara = false;
 	boolean isNewReview = false;
+	boolean isFirstInRev = false;
 	FileReader fr;
 	BufferedReader br;
 	
@@ -21,6 +23,7 @@ public class Driver {
 		
 		preproc = new Preprocessor();
 		lemmatizer = new StanfordLemmatizer();
+		posTagger = new POSTagging();
 	}
 	
 	public void readTrainingFile(String filename){
@@ -32,6 +35,7 @@ public class Driver {
 		String rating = null;
 		List<String> words_list;
 		String[] words_array;
+		HashMap<String,Integer> posFV;
 		ArrayList<Integer> scores= new ArrayList<Integer>();
 		
 		try{
@@ -60,6 +64,7 @@ public class Driver {
 					rating = s.substring(s.indexOf('/')+1 ,s.indexOf(']'));
 					scores = new ArrayList<Integer>();
 					isNewReview = false;
+					isFirstInRev = true;
 					continue;
 				}
 				else {
@@ -72,6 +77,7 @@ public class Driver {
 					s = s.substring(3);
 //					GroupProcessing.addTransition(prevGroupID, 1);
 					curr_s = 5;
+					if(prev_s!=6)
 					Preprocessor.addsentiTransition(prev_s, curr_s);
 					prev_s = 5;
 					prevGroupID = 1;
@@ -83,6 +89,12 @@ public class Driver {
 				{
 					s = s.substring(0, s.length()-4);
 					s = s.trim();
+					posFV = posTagger.getPOSFeatureVector(s);
+					if(isFirstInRev){
+						
+						Preprocessor.addsentiTransition(6, sentiScore + 2);
+						isFirstInRev = false;
+					}
 //					s = preproc.removeStopwords(s);
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
 //					GroupProcessing.addTransition(prevGroupID, currentGroupID);
@@ -92,6 +104,8 @@ public class Driver {
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
 					curr_s = sentiScore + 2;
 					Preprocessor.addsentiTransition(prev_s, curr_s);
+//					Preprocessor.addLengthToSentiDistro(sentiScore, words_array.length);
+					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
 //					System.out.println(s);
 				}
 							
@@ -116,6 +130,8 @@ public class Driver {
 		driver.readTrainingFile("DennisSchwartz_train.txt");
 //		Preprocessor.printSentiDistroByWord();
 		Preprocessor.printSentiTransition();
+//		Preprocessor.printLengthDistroBySentiment();
+//		Preprocessor.printPOSDistroBySentiment();
 //		Preprocessor.printSentiDistroByRating();
 		//driver.readTestFileAndProcess("DennisSchwartz_test.txt");
 	}

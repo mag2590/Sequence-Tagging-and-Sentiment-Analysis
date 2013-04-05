@@ -26,25 +26,20 @@ public class POSTagging
 		}
 	}
 	
-	public HashMap<String,String> attachPOS(String filename)
+	public HashMap<String,String> attachPOS(String line)
 	{
 		try
 		{
-			fr=new FileReader(filename);
-			br=new BufferedReader(fr);
 			String tempstr;
 			String word,pos;
 			String []tokens;
-			while((s=br.readLine())!=null)
-			{
-				tempstr=tagger.tagString(s);
-				tokens=tempstr.split(" ");
-				for(int i=0;i<tokens.length;i++)
-				{
-					word=tokens[i].substring(0, tokens[i].indexOf('_'));
-					pos=tokens[i].substring(tokens[i].indexOf('_')+1);
-					wordPosMap.put(word, pos);
-				}
+			tempstr=tagger.tagString(line);
+			tokens=tempstr.split(" ");
+			for(int i=0;i<tokens.length;i++){
+				
+				word=tokens[i].substring(0, tokens[i].indexOf('_'));
+				pos=tokens[i].substring(tokens[i].indexOf('_') + 1);
+				wordPosMap.put(word, pos);
 			}
 		}
 		catch(Exception e)
@@ -54,11 +49,39 @@ public class POSTagging
 
 		return wordPosMap;
 	}
+	
+	
+	public HashMap<String,Integer> getPOSFeatureVector(String line){
+		
+		HashMap<String,Integer> map = new HashMap<String,Integer>();
+		String tempstr;
+		String word,pos;
+		String []tokens;
+		int count;
+		tempstr=tagger.tagString(line);
+		tokens=tempstr.split(" ");
+		for(int i=0;i<tokens.length;i++){
+			
+			word= tokens[i].substring(0, tokens[i].indexOf('_'));
+			pos= tokens[i].substring(tokens[i].indexOf('_') + 1);
+			
+			if(!map.containsKey(pos))
+				count = 0;
+			else
+				count = map.get(pos);
+			
+			count++;
+			map.put(pos, count);
+		}
+		
+		return map;
+	}
+	
 	public static void main(String args[])
 	{
 		HashMap<String,String> hm=new HashMap<String,String>();
 		POSTagging pt=new POSTagging();
-		hm=pt.attachPOS("Sample.txt");
+		hm=pt.attachPOS("Sample txt");
 		System.out.println(hm);
 		
 	}

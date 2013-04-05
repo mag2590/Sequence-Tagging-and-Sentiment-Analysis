@@ -15,12 +15,132 @@ public class Preprocessor {
 	HashSet<String> stopWords;
 	static TreeMap<String, int[]> wordSentiDistro = new TreeMap<String, int[]>();
 	static HashMap<String, int[]> ratingSentiDistro = new HashMap<String, int[]>();
+	static HashMap<Integer,TreeMap<Integer,Integer>> lengthSentiDistro = new HashMap<Integer, TreeMap<Integer,Integer>>();
+	static HashMap<Integer,TreeMap<String,Integer>> posSentiDistro = new HashMap<Integer, TreeMap<String,Integer>>();
 	static int[][] sentiTransition;
 	
 	public Preprocessor(){
 		
 		sentiTransition = new int[7][7];
 		loadStopwordsList();
+	}
+	
+	public static void addPosmapToSentiDistro(int sentiScore , HashMap<String,Integer> posmap){
+		
+		TreeMap<String,Integer> temp;
+		String pos;
+		int freq;
+		int prevCount = -1; 
+		if(!posSentiDistro.containsKey(sentiScore))
+			temp = new TreeMap<String, Integer>();
+		else
+			temp = posSentiDistro.get(sentiScore);
+		
+		
+		Iterator itr = posmap.entrySet().iterator();
+		Map.Entry me;
+		
+		while(itr.hasNext()){
+			
+			me = (Map.Entry) itr.next();
+			pos = (String) me.getKey();
+			freq = (Integer) me.getValue();
+			
+			if(!temp.containsKey(pos))
+				prevCount = 0;
+			else
+				prevCount = temp.get(pos);
+			
+			prevCount += freq;
+			temp.put(pos, prevCount);
+		}
+		
+		posSentiDistro.put(sentiScore, temp);
+	}
+	
+	public static void printPOSDistroBySentiment(){
+		
+		Iterator itr_tree, itr = posSentiDistro.entrySet().iterator();
+		Map.Entry me, me_tree;
+		TreeMap<String,Integer> posDistro;
+		ArrayList<String> posList;
+		ArrayList<Integer> freqList;
+		int sum = 0;
+		StringBuffer sb;
+		NumberFormat formatter = new DecimalFormat("#0.0000");
+		while(itr.hasNext()){
+			
+			sum = 0; posList = new ArrayList<String>(); freqList = new ArrayList<Integer>();
+			sb = new StringBuffer();
+			me = (Map.Entry) itr.next();
+			
+			sb.append((Integer)me.getKey() + "\t");
+			posDistro = (TreeMap<String,Integer>) me.getValue();
+			
+			itr_tree = posDistro.entrySet().iterator();
+			while(itr_tree.hasNext()){
+				
+				me_tree = (Map.Entry)itr_tree.next();
+				posList.add((String) me_tree.getKey());
+				sum += (Integer) me_tree.getValue();
+				freqList.add((Integer) me_tree.getValue());
+			}
+			
+			for(int i=0; i < posList.size(); i++){
+				
+				sb.append(posList.get(i) + ":");
+				sb.append(formatter.format(((double)freqList.get(i)/sum)) + "  " );
+			}
+				
+			System.out.println(sb.toString());
+		}
+	}
+	
+	
+	public static void addLengthToSentiDistro(int sentiScore , int length){
+		
+		TreeMap<Integer,Integer> temp;
+		int prevCount = -1; 
+		if(!lengthSentiDistro.containsKey(sentiScore))
+			temp = new TreeMap<Integer, Integer>();
+		else
+			temp = lengthSentiDistro.get(sentiScore);
+		
+		if(!temp.containsKey(length))
+			prevCount = 0;
+		else
+			prevCount = temp.get(length);
+		
+		prevCount++;
+		temp.put(length, prevCount);
+		lengthSentiDistro.put(sentiScore, temp);
+	}
+	
+	
+	public static void printLengthDistroBySentiment(){
+		
+		Iterator itr_tree, itr = lengthSentiDistro.entrySet().iterator();
+		Map.Entry me, me_tree;
+		TreeMap<Integer,Integer> lenDistro;
+		StringBuffer sb;
+		while(itr.hasNext()){
+			
+			sb = new StringBuffer();
+			me = (Map.Entry) itr.next();
+			
+			sb.append((Integer)me.getKey() + "\t");
+			lenDistro = (TreeMap<Integer,Integer>) me.getValue();
+			
+			itr_tree = lenDistro.entrySet().iterator();
+			while(itr_tree.hasNext()){
+				
+				me_tree = (Map.Entry)itr_tree.next();
+				sb.append((Integer) me_tree.getKey() + ":");
+				sb.append((Integer) me_tree.getValue() + "  ");
+			}
+			
+			System.out.println(sb.toString());
+		}
 	}
 	
 	public static void addsentiTransition(int i, int j){
