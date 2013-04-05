@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 
 public class Driver {
@@ -23,7 +24,8 @@ public class Driver {
 		
 		preproc = new Preprocessor();
 		lemmatizer = new StanfordLemmatizer();
-		posTagger = new POSTagging();
+//		posTagger = new POSTagging();
+		grpProc = new GroupProcessing();
 	}
 	
 	public void readTrainingFile(String filename){
@@ -35,6 +37,7 @@ public class Driver {
 		String rating = null;
 		List<String> words_list;
 		String[] words_array;
+		HashSet<String> swRemoved;
 		HashMap<String,Integer> posFV;
 		ArrayList<Integer> scores= new ArrayList<Integer>();
 		
@@ -89,23 +92,26 @@ public class Driver {
 				{
 					s = s.substring(0, s.length()-4);
 					s = s.trim();
-					posFV = posTagger.getPOSFeatureVector(s);
+//					posFV = posTagger.getPOSFeatureVector(s);
 					if(isFirstInRev){
 						
 						Preprocessor.addsentiTransition(6, sentiScore + 2);
 						isFirstInRev = false;
 					}
-//					s = preproc.removeStopwords(s);
+//					words_array = s.split(" ");
+					words_list = lemmatizer.lemmatize(s);
+					swRemoved = preproc.removeStopwords(words_list);
+					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore);
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
 //					GroupProcessing.addTransition(prevGroupID, currentGroupID);
 //					words_list = lemmatizer.lemmatize(s);
-//					words_array = s.split(" ");
+
 //					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
-					curr_s = sentiScore + 2;
-					Preprocessor.addsentiTransition(prev_s, curr_s);
+//					curr_s = sentiScore + 2;
+//					Preprocessor.addsentiTransition(prev_s, curr_s);
 //					Preprocessor.addLengthToSentiDistro(sentiScore, words_array.length);
-					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
+//					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
 //					System.out.println(s);
 				}
 							
@@ -126,10 +132,12 @@ public class Driver {
 		// TODO Auto-generated method stub
 
 		Driver driver = new Driver();
-//		driver.readTrainingFile("sample_train.txt");
+//		driver.readTrainingFile("sample.txt");
 		driver.readTrainingFile("DennisSchwartz_train.txt");
+		driver.grpProc.printGroupMap();
+
 //		Preprocessor.printSentiDistroByWord();
-		Preprocessor.printSentiTransition();
+//		Preprocessor.printSentiTransition();
 //		Preprocessor.printLengthDistroBySentiment();
 //		Preprocessor.printPOSDistroBySentiment();
 //		Preprocessor.printSentiDistroByRating();

@@ -214,20 +214,25 @@ public class Preprocessor {
 		stopWords.add("with");
 		stopWords.add("about");
 		stopWords.add("through");
+		
+		stopWords.add("a"); stopWords.add("over"); stopWords.add("her"); stopWords.add("has"); 
+		stopWords.add("than"); stopWords.add("can"); stopWords.add("we"); stopWords.add("be");
 	}
 	
-	public String removeStopwords(String line)
+	public HashSet<String> removeStopwords(List<String> temp)
 	{
-		StringBuffer sb = new StringBuffer();
-		String[] temp = line.split(" ");
-		
-		for(int i = 0 ; i < temp.length; i++)
+//		StringBuffer sb = new StringBuffer();
+//		String[] temp = line.split(" ");
+	
+		HashSet<String> result = new HashSet<String>();
+		for(String w : temp)
 		{
-			if(!stopWords.contains(temp[i]))
-				sb.append(temp[i] + " ");
+			if(!stopWords.contains(w))
+//				sb.append(temp[i] + " ");
+				result.add(w);
 		}
 		
-		return sb.toString();
+		return result;
 	}
 	
 	public static void addWordToSentiDistro(String[] words, int score){
