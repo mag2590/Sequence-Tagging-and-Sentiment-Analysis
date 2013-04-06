@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,9 +44,11 @@ public class Driver {
 		HashSet<String> swRemoved;
 		HashMap<String,Integer> posFV;
 		ArrayList<Integer> scores= new ArrayList<Integer>();
+		FileWriter fw1;
 		
 		try{
 			
+			fw1 = new FileWriter("Overlap_list.txt");
 			fr = new FileReader(filename);
 			br = new BufferedReader(fr); 
 			
@@ -104,7 +107,7 @@ public class Driver {
 //					words_array = s.split(" ");
 					words_list = lemmatizer.lemmatize(s);
 					swRemoved = preproc.removeStopwords(words_list);
-					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore);
+					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore, fw1);
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
 //					GroupProcessing.addTransition(prevGroupID, currentGroupID);
 //					words_list = lemmatizer.lemmatize(s);
@@ -122,6 +125,7 @@ public class Driver {
 //				prevGroupID = currentGroupID;
 				prev_s = curr_s;
 			}
+			fw1.close();
 		}
 		catch(Exception e)
 		{e.printStackTrace();}
