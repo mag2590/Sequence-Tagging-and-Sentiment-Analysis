@@ -14,6 +14,9 @@ public class Driver {
 	StanfordLemmatizer lemmatizer;
 	POSTagging posTagger;
 	
+	int[] totalSentiDistro = new int[5];
+	double[] startProbabilities = new double[5];
+	
 	boolean isNewPara = false;
 	boolean isNewReview = false;
 	boolean isFirstInRev = false;
@@ -109,6 +112,7 @@ public class Driver {
 //					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
 //					curr_s = sentiScore + 2;
+					totalSentiDistro[sentiScore + 2]++ ; 
 //					Preprocessor.addsentiTransition(prev_s, curr_s);
 //					Preprocessor.addLengthToSentiDistro(sentiScore, words_array.length);
 //					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
@@ -121,11 +125,21 @@ public class Driver {
 		}
 		catch(Exception e)
 		{e.printStackTrace();}
-		
 	}
 	
 	public void readTestFileAndProcess(String filename){
 		
+		ArrayList<Integer> allPredictions = new ArrayList<Integer>();
+		
+	}
+	
+	
+	public ArrayList<Integer> addMinorToMajorList(ArrayList<Integer> minor, ArrayList<Integer> major){
+		
+		for(int x : minor)
+			major.add(x);
+		
+		return major;
 	}
 	
 	public static void main(String[] args) {

@@ -13,6 +13,7 @@ public class GroupProcessing {
 	TreeMap<Integer,GroupMetadata> groupMap;
 	static final double similarityThreshold = 0.75;
 	static int groupIDCounter = 0;
+	static int totalOverlap = 0;
 	
 	public GroupProcessing()
 	{
@@ -58,9 +59,10 @@ public class GroupProcessing {
 			found = true;
 			grpMeta = groupMap.get(mappedGroup);
 			grpMeta.count++;
-			grpMeta.sentiments.add(sentiScore);
+			totalOverlap++;
+			grpMeta.addSentiScoreToSentiFV(sentiScore);
 			groupMap.put(mappedGroup, grpMeta);
-//			System.out.println(result.toString());
+			System.out.println(result.toString());
 		}
 		else{
 			grpMeta = new GroupMetadata(processedWords, sentiScore);
@@ -91,12 +93,13 @@ public class GroupProcessing {
 			me = (Map.Entry) itr.next();
 			meta = (GroupMetadata)me.getValue();
 			if(meta.count > 9){
-			System.out.println((Integer)me.getKey() + "\t" + meta.count + "\t" + listToString(meta.sentiments));// + "\t" + meta.constituents.toString());
+			System.out.println((Integer)me.getKey() + "\t" + meta.count + "\t" + meta.sentiFV.toString());// + "\t" + meta.constituents.toString());
 			System.out.println(meta.constituents.toString()+"\n");
 			}
 		}
 		
 		System.out.println("\n Size of Group : " + groupMap.size());
+		System.out.println(totalOverlap);
 	}
 	
 	public String listToString(ArrayList<Integer> list){
