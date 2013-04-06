@@ -81,8 +81,9 @@ public class Rating {
 	{
 		Iterator itr = ratingSentiDistro.entrySet().iterator();
 		int[] vals;
+		int sum = 0;
 		String rating = null;
-		NumberFormat formatter = new DecimalFormat("#0");
+		NumberFormat formatter = new DecimalFormat("#0.000");
 		Map.Entry me; 
 		FileWriter fw;
 		
@@ -95,17 +96,20 @@ public class Rating {
 				me = (Map.Entry) itr.next();
 				rating = (String) me.getKey();
 				vals = (int[])me.getValue();
+				for(int v : vals)
+					sum += v;
 				
-//				System.out.println(sum);
+				System.out.println(sum);
 				StringBuffer sb = new StringBuffer();		
 				sb.append(rating + "\t\t");
 				int f_name = -2;
 				for(int v : vals){
 						sb.append(f_name + ":");
-						sb.append(formatter.format(((double)v)) + "\t");
+						System.out.println(f_name + ": " + v);
+						sb.append(formatter.format(((double)v/sum)) + "\t\t");
 						f_name++;
 				}
-				
+				sum = 0;
 				System.out.println(sb.toString());// + "\n");
 				fw.write(sb.toString() + "\n");
 			}
