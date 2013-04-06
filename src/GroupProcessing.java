@@ -29,7 +29,51 @@ public class GroupProcessing {
 		
 	}
 	
-	public int getOrCreateGroupIDFromSentence(HashSet<String> processedWords, int sentiScore, FileWriter fw){
+	public int test_getGroupID(HashSet<String> processedWords){
+		Iterator itr = groupMap.entrySet().iterator();
+		HashSet<String> temp, intersectionMap, result = new HashSet<String>();
+		int currentGroupID, maxSize = Integer.MIN_VALUE, mappedGroup = -1, c;
+		GroupMetadata grpMeta;
+		boolean found = false;
+		Map.Entry me;
+		
+		try{
+			
+			while(itr.hasNext()){
+				
+				me = (Map.Entry) itr.next();
+				currentGroupID = (Integer) me.getKey();
+				temp = ((GroupMetadata) me.getValue()).constituents;
+				
+				if(temp==null) continue;
+				
+				intersectionMap = new HashSet<String>(processedWords);
+				intersectionMap.retainAll(temp);
+				
+				if(intersectionMap.size() > maxSize){
+					maxSize = intersectionMap.size();
+					result = intersectionMap;
+					mappedGroup = currentGroupID;
+				}
+			}
+			
+			if(maxSize > 2){
+				found = true;
+				grpMeta = groupMap.get(mappedGroup);
+				totalOverlap++;
+			}
+			else{
+				return -1;
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
+
+		return mappedGroup;
+	}
+	
+	public int train_getOrCreateGroupID(HashSet<String> processedWords, int sentiScore, FileWriter fw){
 		
 		Iterator itr = groupMap.entrySet().iterator();
 		HashSet<String> temp, intersectionMap, result = new HashSet<String>();
@@ -86,6 +130,10 @@ public class GroupProcessing {
 		return 0;
 	}
 
+	public double[] getSentiDistroForUnknownSentence(String sentence){
+		return new double[5];
+	}
+	
 	public double[] getSentimentDistributionByGroupID(String groupID){
 		return new double[5];
 	}

@@ -115,7 +115,7 @@ public class Driver {
 //					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
 //					curr_s = sentiScore + 2;
-					totalSentiDistro[sentiScore + 2]++ ; 
+					totalSentiDistro[sentiScore+2]++ ; 
 //					Preprocessor.addsentiTransition(prev_s, curr_s);
 //					Preprocessor.addLengthToSentiDistro(sentiScore, words_array.length);
 //					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
@@ -131,9 +131,75 @@ public class Driver {
 		{e.printStackTrace();}
 	}
 	
+	public ArrayList<Integer> predictSequence(ArrayList<Integer> groupID_list){
+		
+		return new ArrayList<Integer>();
+	}
+	
 	public void readTestFileAndProcess(String filename){
 		
 		ArrayList<Integer> allPredictions = new ArrayList<Integer>();
+		List<String> words_list;
+		HashSet<String> swRemoved;
+		
+		String s;
+		
+		try{
+		
+			fr = new FileReader("DennisSchwartz_test.txt");
+			br = new BufferedReader(fr); 
+			
+			while((s = br.readLine()) != null){ 
+			
+				if(s.length()==0){
+					// predictSequence
+					continue;
+				}
+				
+				if(s.charAt(0)=='[')
+					isNewReview = true;
+				else if(s.charAt(0)=='{')
+					isNewPara = true;
+				
+				if(isNewReview){
+					currentGroupID = 0;
+					isNewReview = false;
+					isFirstInRev = true;
+					continue;
+				}
+				else {
+				}
+				
+				
+				if(isNewPara){
+					s = s.substring(3);
+//					GroupProcessing.addTransition(prevGroupID, 1);
+					prevGroupID = 1;
+					isNewPara = false;
+				}
+				
+
+				if(!isNewReview && s.length()>4)
+				{
+					s = s.substring(0, s.length()-4);
+					s = s.trim();
+					if(isFirstInRev){
+						
+						isFirstInRev = false;
+					}
+//					words_array = s.split(" ");
+					words_list = lemmatizer.lemmatize(s);
+					swRemoved = preproc.removeStopwords(words_list);
+					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore, fw1);
+//					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
+//					GroupProcessing.addTransition(prevGroupID, currentGroupID);
+//					words_list = lemmatizer.lemmatize(s);
+				}
+			}
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 		
 	}
 	
