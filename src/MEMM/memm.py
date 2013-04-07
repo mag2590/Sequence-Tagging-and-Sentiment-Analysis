@@ -1,6 +1,10 @@
 import fileinput
 import re
 
+def memm_prob(line,train_dict,fw,prev_sent):
+    
+    return 1
+    
 def main():
     #Training portion    
     train_dict = dict()
@@ -39,6 +43,10 @@ def main():
     
     #Testing portion
     test_file = input("Enter testing file name: ")
+    viterbi = dict()
+    backpointer = dict()
+    new_review = False
+    line_no = 0
     
     for line in fileinput.input(test_file):
         if line.find("[") == -1 and len(line) > 2:
@@ -48,7 +56,35 @@ def main():
             line = line.replace('<','')
             line = line.replace('>','')
             
-            max_enc = 0
+            if new_review:
+                print(viterbi)
+                new_review = False
+                viterbi = dict()
+                backpointer = dict()
+                line_no = 0
+                viterbi[(line_no,-2)] = 1
+                viterbi[(line_no,-1)] = 1
+                viterbi[(line_no,0)] = 1
+                viterbi[(line_no,1)] = 1
+                viterbi[(line_no,2)] = 1
+            else:
+                viterbi[(line_no,-2)] = viterbi[(line_no-1,-2)] * memm_prob(line,train_dict,fw,prev_sent)
+                viterbi[(line_no,-1)] = viterbi[(line_no-1,-1)] * memm_prob(line,train_dict,fw,prev_sent)
+                viterbi[(line_no,0)] = viterbi[(line_no-1,0)] * memm_prob(line,train_dict,fw,prev_sent)
+                viterbi[(line_no,1)] = viterbi[(line_no-1,1)] * memm_prob(line,train_dict,fw,prev_sent)
+                viterbi[(line_no,2)] = viterbi[(line_no-1,2)] * memm_prob(line,train_dict,fw,prev_sent)
+    
+            line_no += 1
+            '''max_sent = 0
+            max_prob = 0
+            for k in fw.keys():
+                if prev_sent == k.split('#')[-1] and max_prob < fw[k]:
+                    max_prob = fw[k]
+                    max_sent = k.split('#')[0]
+            
+            print(max_prob)'''
+            
+            '''max_enc = 0
             max_sent = 0
             for k in train_dict.keys():
                 intr_len = len(set(k.split()).intersection(set(line.split())))        
@@ -56,6 +92,9 @@ def main():
                     max_enc = intr_len
                     max_sent = train_dict[k][0]
             
-            print(max_sent,max_enc)
-                    
+            print(max_sent,max_enc)'''
+        else:
+            new_review = True
+    
+                        
 main()
