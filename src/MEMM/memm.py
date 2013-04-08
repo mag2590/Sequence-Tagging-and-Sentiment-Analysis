@@ -1,9 +1,11 @@
 import fileinput
 import re
 
-def memm_prob(line,train_dict,fw,prev_sent):
-    
-    return 1
+def memm_prob(line,train_dict,fw,prev_sent,state):
+    if len(fw)!= 0:
+        return fw[(str(state)+'#'+str(prev_sent))]
+    else:
+        return 1
     
 def main():
     #Training portion    
@@ -57,7 +59,7 @@ def main():
             line = line.replace('>','')
             
             if new_review:
-                print(viterbi)
+                print(backpointer)
                 new_review = False
                 viterbi = dict()
                 backpointer = dict()
@@ -68,11 +70,22 @@ def main():
                 viterbi[(line_no,1)] = 1
                 viterbi[(line_no,2)] = 1
             else:
-                viterbi[(line_no,-2)] = viterbi[(line_no-1,-2)] * memm_prob(line,train_dict,fw,prev_sent)
-                viterbi[(line_no,-1)] = viterbi[(line_no-1,-1)] * memm_prob(line,train_dict,fw,prev_sent)
-                viterbi[(line_no,0)] = viterbi[(line_no-1,0)] * memm_prob(line,train_dict,fw,prev_sent)
-                viterbi[(line_no,1)] = viterbi[(line_no-1,1)] * memm_prob(line,train_dict,fw,prev_sent)
-                viterbi[(line_no,2)] = viterbi[(line_no-1,2)] * memm_prob(line,train_dict,fw,prev_sent)
+                viterbi[(line_no,-2)] = viterbi[(line_no-1,-2)] * memm_prob(line,train_dict,fw,prev_sent,-2)
+                viterbi[(line_no,-1)] = viterbi[(line_no-1,-1)] * memm_prob(line,train_dict,fw,prev_sent,-1)
+                viterbi[(line_no,0)] = viterbi[(line_no-1,0)] * memm_prob(line,train_dict,fw,prev_sent,0)
+                viterbi[(line_no,1)] = viterbi[(line_no-1,1)] * memm_prob(line,train_dict,fw,prev_sent,1)
+                viterbi[(line_no,2)] = viterbi[(line_no-1,2)] * memm_prob(line,train_dict,fw,prev_sent,2)
+                backpointer[line_no] = max(viterbi[(line_no,-2)],viterbi[(line_no,-1)],viterbi[(line_no,0)],viterbi[(line_no,1)],viterbi[(line_no,2)])
+                if backpointer[line_no] == viterbi[(line_no,-2)]:
+                    backpointer[line_no] = -2
+                elif backpointer[line_no] == viterbi[(line_no,-1)]:
+                    backpointer[line_no] = -1
+                elif backpointer[line_no] == viterbi[(line_no,0)]:
+                    backpointer[line_no] = 0
+                elif backpointer[line_no] == viterbi[(line_no,1)]:
+                    backpointer[line_no] = 1
+                elif backpointer[line_no] == viterbi[(line_no,1)]:
+                    backpointer[line_no] = 2    
     
             line_no += 1
             '''max_sent = 0
