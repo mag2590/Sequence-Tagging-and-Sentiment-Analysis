@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 
 public class GroupMetadata {
@@ -8,7 +9,7 @@ public class GroupMetadata {
 	int count;
 	int groupID;
 	private static int lastUsedID;
-	ArrayList<Integer> sentiments;
+	TreeMap<Integer,Integer> sentiFV;
 	
 	public GroupMetadata(){
 		lastUsedID = -1;
@@ -19,8 +20,20 @@ public class GroupMetadata {
 		this.groupID = lastUsedID + 1;
 		lastUsedID++;
 		this.count = 1;
-		this.sentiments = new ArrayList<Integer>();
-		this.sentiments.add(sentiScore);
+		this.sentiFV = new TreeMap<Integer, Integer>();
+		this.sentiFV.put(sentiScore,1);
+	}
+	
+	public void addSentiScoreToSentiFV(int sentiScore){
+		
+		int x;
+		if(sentiFV.containsKey(sentiScore))
+			x = sentiFV.get(sentiScore);
+		else
+			x = 0;
+		
+		x++;
+		sentiFV.put(sentiScore,x);
 	}
 	
 	public static void main(String[] args) {

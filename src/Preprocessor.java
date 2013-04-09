@@ -149,6 +149,66 @@ public class Preprocessor {
 		sentiTransition[i][j]++;
 	}
 	
+	public double[] setStartProbabilities(){
+
+		double[] startProb = new double[5];
+		int sum = 0;
+		for(int i = 0; i < 5; i++){
+			sum += sentiTransition[6][i];
+		}
+		
+		for(int j = 0; j < 5; j++){
+			startProb[j] = ((double)(sentiTransition[6][j]))/sum;
+		}
+		
+		return startProb;
+	}
+	
+	public double[][] setTransitionProbability(){
+		
+		double[][] transTable  = new double[7][7];
+		
+		int sum = 0, j;
+		
+		for(int i = 0; i < 7 ; i++){
+			
+			sum = 0;
+			for(j = 0; j < 7 ; j++){
+				
+				sum += sentiTransition[i][j];
+			}
+			
+			for(j = 0; j < 7 ; j++){
+				transTable[i][j] = ((double)sentiTransition[i][j])/sum;
+			}
+		}
+		
+		return transTable;
+	}
+	
+	public double[][] setEmissionProbability(ArrayList<Integer> groupID_list, GroupProcessing grpProc){
+		
+		int numGroups = groupID_list.size();
+		double[][] emissionProb = new double[5][numGroups];
+		
+		GroupMetadata grpMeta;
+		int count, currentGrpID;
+		
+		for(int j = 0 ; j < numGroups; j++){
+			
+			currentGrpID = groupID_list.get(j);
+			grpMeta = grpProc.groupMap.get(currentGrpID);
+			count = grpMeta.count;
+			
+			for(int i = 0 ; i < 5 ; i++){		
+				
+				emissionProb[i][j] = ((double)grpMeta.sentiFV.get(i-2))/count;
+			}
+		}
+		
+		return emissionProb;
+	}
+	
 	public static void printSentiTransition(){
 		
 		StringBuffer sb;

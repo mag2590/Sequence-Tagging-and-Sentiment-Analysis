@@ -1,3 +1,4 @@
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,6 +14,7 @@ public class GroupProcessing {
 	TreeMap<Integer,GroupMetadata> groupMap;
 	static final double similarityThreshold = 0.75;
 	static int groupIDCounter = 0;
+	static int totalOverlap = 0;
 	
 	public GroupProcessing()
 	{
@@ -27,7 +29,9 @@ public class GroupProcessing {
 		
 	}
 	
-	public int getOrCreateGroupIDFromSentence(HashSet<String> processedWords, int sentiScore){
+	public int test_getGroupID(HashSet<String> processedWords){
+		
+		// This function is done. handle the case of -1 differently.
 		
 		Iterator itr = groupMap.entrySet().iterator();
 		HashSet<String> temp, intersectionMap, result = new HashSet<String>();
@@ -36,35 +40,88 @@ public class GroupProcessing {
 		boolean found = false;
 		Map.Entry me;
 		
-		while(itr.hasNext()){
+		try{
 			
-			me = (Map.Entry) itr.next();
-			currentGroupID = (Integer) me.getKey();
-			temp = ((GroupMetadata) me.getValue()).constituents;
+			while(itr.hasNext()){
+				
+				me = (Map.Entry) itr.next();
+				currentGroupID = (Integer) me.getKey();
+				temp = ((GroupMetadata) me.getValue()).constituents;
+				
+				if(temp == null) continue;
+				
+				intersectionMap = new HashSet<String>(processedWords);
+				intersectionMap.retainAll(temp);
+				
+				if(intersectionMap.size() > maxSize){
+					maxSize = intersectionMap.size();
+					result = intersectionMap;
+					mappedGroup = currentGroupID;
+				}
+			}
 			
-			if(temp==null) continue;
-			
-			intersectionMap = new HashSet<String>(processedWords);
-			intersectionMap.retainAll(temp);
-			
-			if(intersectionMap.size() > maxSize){
-				maxSize = intersectionMap.size();
-				result = intersectionMap;
-				mappedGroup = currentGroupID;
+			if(maxSize > 2){
+				found = true;
+				grpMeta = groupMap.get(mappedGroup);
+				totalOverlap++;
+			}
+			else{
+				return -1;
 			}
 		}
-		
-		if(maxSize > 5){
-			found = true;
-			grpMeta = groupMap.get(mappedGroup);
-			grpMeta.count++;
-			grpMeta.sentiments.add(sentiScore);
-			groupMap.put(mappedGroup, grpMeta);
-//			System.out.println(result.toString());
+		catch(Exception e){
+			e.printStackTrace();
 		}
-		else{
-			grpMeta = new GroupMetadata(processedWords, sentiScore);
-			groupMap.put(grpMeta.groupID, grpMeta);
+
+		return mappedGroup;
+	}
+	
+	public int train_getOrCreateGroupID(HashSet<String> processedWords, int sentiScore, FileWriter fw){
+		
+		Iterator itr = groupMap.entrySet().iterator();
+		HashSet<String> temp, intersectionMap, result = new HashSet<String>();
+		int currentGroupID, maxSize = Integer.MIN_VALUE, mappedGroup = -1, c;
+		GroupMetadata grpMeta;
+		boolean found = false;
+		Map.Entry me;
+		
+		try{
+			
+			while(itr.hasNext()){
+				
+				me = (Map.Entry) itr.next();
+				currentGroupID = (Integer) me.getKey();
+				temp = ((GroupMetadata) me.getValue()).constituents;
+				
+				if(temp==null) continue;
+				
+				intersectionMap = new HashSet<String>(processedWords);
+				intersectionMap.retainAll(temp);
+				
+				if(intersectionMap.size() > maxSize){
+					maxSize = intersectionMap.size();
+					result = intersectionMap;
+					mappedGroup = currentGroupID;
+				}
+			}
+			
+			if(maxSize > 2){
+				found = true;
+				grpMeta = groupMap.get(mappedGroup);
+				grpMeta.count++;
+				totalOverlap++;
+				grpMeta.addSentiScoreToSentiFV(sentiScore);
+				groupMap.put(mappedGroup, grpMeta);
+				fw.write(result.toString() + "\n");
+			}
+			else{
+				grpMeta = new GroupMetadata(processedWords, sentiScore);
+				groupMap.put(grpMeta.groupID, grpMeta);
+			}
+			
+		}
+		catch(Exception e){
+			e.printStackTrace();
 		}
 		
 //		System.out.println(result.toString());
@@ -76,6 +133,10 @@ public class GroupProcessing {
 		return 0;
 	}
 
+	public double[] getSentiDistroForUnknownSentence(String sentence){
+		return new double[5];
+	}
+	
 	public double[] getSentimentDistributionByGroupID(String groupID){
 		return new double[5];
 	}
@@ -91,12 +152,13 @@ public class GroupProcessing {
 			me = (Map.Entry) itr.next();
 			meta = (GroupMetadata)me.getValue();
 			if(meta.count > 9){
-			System.out.println((Integer)me.getKey() + "\t" + meta.count + "\t" + listToString(meta.sentiments));// + "\t" + meta.constituents.toString());
+			System.out.println((Integer)me.getKey() + "\t" + meta.count + "\t" + meta.sentiFV.toString());// + "\t" + meta.constituents.toString());
 			System.out.println(meta.constituents.toString()+"\n");
 			}
 		}
 		
 		System.out.println("\n Size of Group : " + groupMap.size());
+		System.out.println(totalOverlap);
 	}
 	
 	public String listToString(ArrayList<Integer> list){
