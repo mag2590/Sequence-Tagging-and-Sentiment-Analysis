@@ -30,6 +30,9 @@ public class GroupProcessing {
 	}
 	
 	public int test_getGroupID(HashSet<String> processedWords){
+		
+		// This function is done. handle the case of -1 differently.
+		
 		Iterator itr = groupMap.entrySet().iterator();
 		HashSet<String> temp, intersectionMap, result = new HashSet<String>();
 		int currentGroupID, maxSize = Integer.MIN_VALUE, mappedGroup = -1, c;
@@ -45,7 +48,7 @@ public class GroupProcessing {
 				currentGroupID = (Integer) me.getKey();
 				temp = ((GroupMetadata) me.getValue()).constituents;
 				
-				if(temp==null) continue;
+				if(temp == null) continue;
 				
 				intersectionMap = new HashSet<String>(processedWords);
 				intersectionMap.retainAll(temp);

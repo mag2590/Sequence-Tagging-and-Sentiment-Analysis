@@ -16,7 +16,8 @@ public class Driver {
 	POSTagging posTagger;
 	
 	int[] totalSentiDistro = new int[5];
-	double[] startProbabilities = new double[5];
+	double[] startProb = new double[5];
+	double[][] transProb, emissionProb;
 	
 	boolean isNewPara = false;
 	boolean isNewReview = false;
@@ -70,14 +71,14 @@ public class Driver {
 					Preprocessor.addsentiTransition(prev_s, curr_s);
 					prev_s = 6;
 					sentiScore = -5;
-					rating = s.substring(s.indexOf('/')+1 ,s.indexOf(']'));
+					rating = s.substring(s.indexOf('/') + 1 ,s.indexOf(']'));
 					scores = new ArrayList<Integer>();
 					isNewReview = false;
 					isFirstInRev = true;
 					continue;
 				}
 				else {
-					sentiScore = Integer.parseInt(s.substring(s.indexOf('<')+1 ,s.indexOf('>')));
+					sentiScore = Integer.parseInt(s.substring(s.indexOf('<') + 1 ,s.indexOf('>')));
 					scores.add(sentiScore);
 				}
 				
@@ -107,7 +108,7 @@ public class Driver {
 //					words_array = s.split(" ");
 					words_list = lemmatizer.lemmatize(s);
 					swRemoved = preproc.removeStopwords(words_list);
-					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore, fw1);
+					grpProc.train_getOrCreateGroupID(swRemoved, sentiScore, fw1);
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
 //					GroupProcessing.addTransition(prevGroupID, currentGroupID);
 //					words_list = lemmatizer.lemmatize(s);
@@ -126,12 +127,25 @@ public class Driver {
 				prev_s = curr_s;
 			}
 			fw1.close();
+			startProb = preproc.setStartProbabilities();
+			transProb = preproc.setTransitionProbability();
 		}
 		catch(Exception e)
 		{e.printStackTrace();}
 	}
 	
 	public ArrayList<Integer> predictSequence(ArrayList<Integer> groupID_list){
+		
+		emissionProb = preproc.setEmissionProbability(groupID_list, grpProc);
+		
+		double[] runningProb = new double[5];
+		
+		for(int i = 0 ; i < groupID_list.size(); i++){
+			
+			if(i==0){
+				
+			}
+		}
 		
 		return new ArrayList<Integer>();
 	}
@@ -141,6 +155,11 @@ public class Driver {
 		ArrayList<Integer> allPredictions = new ArrayList<Integer>();
 		List<String> words_list;
 		HashSet<String> swRemoved;
+		int current_groupID = -1;
+		int totalSentences = 0, unseenSentences = 0;
+		int prevGroupID = -1, currentGroupID = -1;
+		ArrayList<Integer> tempGroupIDList = new ArrayList<Integer>();
+		ArrayList<Integer> tempPredictionList =  new ArrayList<Integer>();
 		
 		String s;
 		
@@ -151,8 +170,12 @@ public class Driver {
 			
 			while((s = br.readLine()) != null){ 
 			
-				if(s.length()==0){
+				if(s.length() == 0){
 					// predictSequence
+//					tempPredictionList = predictSequence(tempGroupIDList);
+//					for(int x : tempPredictionList)
+//						allPredictions.add(x);
+					tempGroupIDList = new ArrayList<Integer>();
 					continue;
 				}
 				
@@ -174,8 +197,8 @@ public class Driver {
 				if(isNewPara){
 					s = s.substring(3);
 //					GroupProcessing.addTransition(prevGroupID, 1);
-					prevGroupID = 1;
 					isNewPara = false;
+					prevGroupID = 1;
 				}
 				
 
@@ -187,12 +210,15 @@ public class Driver {
 						
 						isFirstInRev = false;
 					}
-//					words_array = s.split(" ");
+					
+					totalSentences++;
 					words_list = lemmatizer.lemmatize(s);
 					swRemoved = preproc.removeStopwords(words_list);
-					grpProc.getOrCreateGroupIDFromSentence(swRemoved, sentiScore, fw1);
+					current_groupID = grpProc.test_getGroupID(swRemoved);
+					if(current_groupID != -1){
+						unseenSentences++;
+					}
 //					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
-//					GroupProcessing.addTransition(prevGroupID, currentGroupID);
 //					words_list = lemmatizer.lemmatize(s);
 				}
 			}
@@ -200,7 +226,8 @@ public class Driver {
 		catch(Exception e){
 			e.printStackTrace();
 		}
-		
+		System.out.println("unseenSentences : " + unseenSentences);
+		System.out.println("totalSentences : " + totalSentences);
 	}
 	
 	
@@ -218,6 +245,8 @@ public class Driver {
 		Driver driver = new Driver();
 //		driver.readTrainingFile("sample.txt");
 		driver.readTrainingFile("DennisSchwartz_train.txt");
+		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+		System.out.println("\n");
 		driver.grpProc.printGroupMap();
 
 //		Preprocessor.printSentiDistroByWord();
