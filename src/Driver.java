@@ -225,6 +225,7 @@ public class Driver {
 					}
 					maxValuedSS = getIndexOfMaxValuedSS(currentProb);
 					prevProb = currentProb;
+					System.out.println("Just out of START with unknown");
 				}
 				else{
 					grpMeta = grpProc.groupMap.get(currentGrpID);
@@ -243,6 +244,7 @@ public class Driver {
 					
 					maxValuedSS = getIndexOfMaxValuedSS(currentProb);
 					prevProb = currentProb;
+					System.out.println("Just out of START with known");
 				}
 			}// if i==0
 			
@@ -256,15 +258,25 @@ public class Driver {
 					
 //						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
 						sentiCountForGivenGroup = 0.0001;
+						
+						System.out.println("prevProb found is " ); printArray(prevProb);
+						
 						for(int k = 0; k < 5; k++){
 							
-							tempTransLog = (transProb[k][j]==0?0:Math.log(transProb[k][j]));
-							System.out.println("transProb["+k+"]["+j+"]" + transProb[k][j]);
-							System.out.println("prevProb["+k+"] : " + prevProb[k]);
+							tempTransLog = (transProb[k][j]==0?Math.log(0.0001):Math.log(transProb[k][j]));
+//							System.out.println("transProb["+k+"]["+j+"]" + tempTransLog);
+							
 							tempProb[k] = Math.log(prevProb[k])
 									+ tempTransLog 
 									+ Math.log(sentiCountForGivenGroup)
 									- 2*Math.log(totalSentiDistro[j]);
+							
+							System.out.println( k+"\t"+ prevProb[k] + "\t" + tempTransLog +
+									"\t" + Math.log(sentiCountForGivenGroup) + "\t" + Math.log(totalSentiDistro[j]));
+							System.out.println("@@@@@prevProb["+k+"] : " + prevProb[k]);
+							
+							if(tempProb[k]==Double.NaN)
+								System.out.println("k-" + k + "\tj-" + j);
 						}
 						
 						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
@@ -283,15 +295,23 @@ public class Driver {
 						else
 							sentiCountForGivenGroup = 0.0001;
 							
+						System.out.println("prevProb found is " ); printArray(prevProb);
+						
 						for(int k = 0; k < 5; k++){
 							
-							tempTransLog = (transProb[k][j]==0?0:Math.log(transProb[k][j]));
-							System.out.println("transProb["+k+"]["+j+"]" + transProb[k][j]);
-							System.out.println("prevProb["+k+"] : " + prevProb[k]);
+							tempTransLog = (transProb[k][j]==0?Math.log(0.0001):Math.log(transProb[k][j]));
+//							System.out.println("transProb["+k+"]["+j+"]" + tempTransLog);
 							tempProb[k] = Math.log(prevProb[k])
 									+ tempTransLog 
 									+ Math.log(sentiCountForGivenGroup)
 									- 2*Math.log(totalSentiDistro[j]);
+							
+							System.out.println( k+"\t"+ prevProb[k] + "\t" + tempTransLog +
+									"\t" + Math.log(sentiCountForGivenGroup) + "\t" + Math.log(totalSentiDistro[j]));
+							System.out.println("-----prevProb["+k+"] : " + prevProb[k]);
+							
+							if(tempProb[k]==Double.NaN)
+								System.out.println("k-" + k + "\tj-" + j);
 						}
 						
 						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
@@ -301,6 +321,7 @@ public class Driver {
 					prevProb = currentProb;
 				} // known group block ends
 			}
+			System.out.println("prevProb is as follows!");
 			printProb(prevProb);
 		} // all groups processed
 		
