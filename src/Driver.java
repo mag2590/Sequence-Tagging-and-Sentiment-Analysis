@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +10,15 @@ import java.util.List;
 
 public class Driver {
 
+	/**
+	 * 		1. Merge groups and see
+	 * 		2. Sort for longest and then do same stuff
+	 * 		3. Normalization?
+	 * 		4. Sentiment score for each word - based hacks?!
+	 * 		5. Distribute NP over others
+	 */
+	
+	
 	FeatureGenerator featureGen;
 	GroupMetadata grpMeta;
 	GroupProcessing grpProc;
@@ -119,9 +130,9 @@ public class Driver {
 
 //					Preprocessor.addWordToSentiDistro(words_array, sentiScore);
 //					Preprocessor.addWordToSentiDistro(words_list, sentiScore);
-//					curr_s = sentiScore + 2;
+					curr_s = sentiScore + 2;
 					totalSentiDistro[sentiScore+2]++ ; 
-//					Preprocessor.addsentiTransition(prev_s, curr_s);
+					Preprocessor.addsentiTransition(prev_s, curr_s);
 //					Preprocessor.addLengthToSentiDistro(sentiScore, words_array.length);
 //					Preprocessor.addPosmapToSentiDistro(sentiScore, posFV);
 //					System.out.println(s);
@@ -141,6 +152,16 @@ public class Driver {
 		{e.printStackTrace();}
 	}
 
+	public void printProb(double[] arr){
+		
+		StringBuffer sb = new StringBuffer();
+		NumberFormat formatter = new DecimalFormat("#0.0000000000000");
+		for(double d : arr)
+			sb.append(Math.pow(Math.E, d) + "\t");
+		
+		System.out.println(sb.toString());
+	}
+	
 	public void printArray(double[] arr){
 		
 		StringBuffer sb = new StringBuffer();
@@ -181,7 +202,7 @@ public class Driver {
 		double[] prevProb = new double[5], currentProb = new double[5], tempProb = new double[5];
 		GroupMetadata grpMeta;
 		int currentGrpID, maxValuedSS=-1;
-		double sentiCountForGivenGroup = Double.MIN_VALUE;
+		double sentiCountForGivenGroup = 1, tempTransLog, tempLog;
 		
 		for(int i = 0 ; i < groupID_list.size(); i++){
 			
@@ -193,11 +214,13 @@ public class Driver {
 					
 					for(int j = 0; j < 5 ; j++){
 
-						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
+//						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
+						sentiCountForGivenGroup = 0.0001;
 						
 						currentProb[j] = Math.log(startProb[j]) 
 								+ Math.log(sentiCountForGivenGroup)-Math.log(totalSentiDistro[j]);
-						
+
+//						System.out.println("currentProb["+j+"]" + Math.pow(Math.E,currentProb[j]));
 						backLinkGroupID[j][0] = -5;
 					}
 					maxValuedSS = getIndexOfMaxValuedSS(currentProb);
@@ -210,7 +233,7 @@ public class Driver {
 						if(grpMeta.sentiFV.containsKey(j-2))
 							sentiCountForGivenGroup = grpMeta.sentiFV.get(j-2);
 						else
-							sentiCountForGivenGroup = Double.MIN_VALUE;
+							sentiCountForGivenGroup = 0.0001;
 						
 						currentProb[j] = Math.log(startProb[j]) 
 								+ Math.log(sentiCountForGivenGroup)-Math.log(totalSentiDistro[j]);
@@ -231,13 +254,17 @@ public class Driver {
 					
 					for(int j = 0; j < 5 ; j++){
 					
-						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
-							
+//						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
+						sentiCountForGivenGroup = 0.0001;
 						for(int k = 0; k < 5; k++){
 							
+							tempTransLog = (transProb[k][j]==0?0:Math.log(transProb[k][j]));
+							System.out.println("transProb["+k+"]["+j+"]" + transProb[k][j]);
+							System.out.println("prevProb["+k+"] : " + prevProb[k]);
 							tempProb[k] = Math.log(prevProb[k])
-									+ Math.log(transProb[k][j]) +
-									+ Math.log(sentiCountForGivenGroup) - 2*Math.log(totalSentiDistro[j]);
+									+ tempTransLog 
+									+ Math.log(sentiCountForGivenGroup)
+									- 2*Math.log(totalSentiDistro[j]);
 						}
 						
 						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
@@ -254,13 +281,17 @@ public class Driver {
 						if(grpMeta.sentiFV.containsKey(j-2))
 							sentiCountForGivenGroup = grpMeta.sentiFV.get(j-2);
 						else
-							sentiCountForGivenGroup = Double.MIN_VALUE;
+							sentiCountForGivenGroup = 0.0001;
 							
 						for(int k = 0; k < 5; k++){
 							
+							tempTransLog = (transProb[k][j]==0?0:Math.log(transProb[k][j]));
+							System.out.println("transProb["+k+"]["+j+"]" + transProb[k][j]);
+							System.out.println("prevProb["+k+"] : " + prevProb[k]);
 							tempProb[k] = Math.log(prevProb[k])
-									+ Math.log(transProb[k][j]) +
-									+ Math.log(sentiCountForGivenGroup) - 2*Math.log(totalSentiDistro[j]);
+									+ tempTransLog 
+									+ Math.log(sentiCountForGivenGroup)
+									- 2*Math.log(totalSentiDistro[j]);
 						}
 						
 						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
@@ -269,7 +300,8 @@ public class Driver {
 					} // for j ends
 					prevProb = currentProb;
 				} // known group block ends
-			} 
+			}
+			printProb(prevProb);
 		} // all groups processed
 		
 		ArrayList<Integer>reverseList = new ArrayList<Integer>();
@@ -395,11 +427,12 @@ public class Driver {
 
 		Driver driver = new Driver();
 //		driver.readTrainingFile("sample.txt");
-		driver.readTrainingFile("DennisSchwartz_train.txt");
-		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+//		driver.readTrainingFile("DennisSchwartz_train.txt");
+//		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
 		
-//		driver.readTrainingFile("hmm_train.txt");
-//		driver.readTestFileAndProcess("hmm_test.txt");
+		driver.readTrainingFile("hmm_train.txt");
+		Preprocessor.printSentiTransition();
+		driver.readTestFileAndProcess("single_test.txt");
 
 		System.out.println("\n");
 		
