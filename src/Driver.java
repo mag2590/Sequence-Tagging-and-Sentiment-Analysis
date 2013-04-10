@@ -19,11 +19,14 @@ public class Driver {
 	double[] startProb = new double[5];
 	double[][] transProb, emissionProb;
 	
+	double[] unknownGroupDistro = new double[]{0.0228,0.0952,0.72148,0.1119,0.04895};
+		
 	boolean isNewPara = false;
 	boolean isNewReview = false;
 	boolean isFirstInRev = false;
 	FileReader fr;
 	BufferedReader br;
+	int allReviewCount = 6050;
 	
 	public Driver(){
 		
@@ -158,7 +161,7 @@ public class Driver {
 		
 		double[] prevProb = new double[5], currentProb = new double[5], tempProb = new double[5];
 		GroupMetadata grpMeta;
-		int currentGrpID, maxValuedSS;
+		int currentGrpID, maxValuedSS=-1;
 		double sentiCountForGivenGroup = Double.MIN_VALUE;
 		
 		for(int i = 0 ; i < groupID_list.size(); i++){
@@ -168,6 +171,18 @@ public class Driver {
 				currentGrpID = groupID_list.get(0);
 				if(currentGrpID ==-1){
 					// substitute distribution
+					
+					for(int j = 0; j < 5 ; j++){
+
+						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
+						
+						currentProb[j] = Math.log(startProb[j]) 
+								+ Math.log(sentiCountForGivenGroup)-Math.log(totalSentiDistro[j]);
+						
+						backLinkGroupID[j][0] = -5;
+					}
+					maxValuedSS = getIndexOfMaxValuedSS(currentProb);
+					prevProb = currentProb;
 				}
 				else{
 					grpMeta = grpProc.groupMap.get(currentGrpID);
@@ -181,7 +196,7 @@ public class Driver {
 						currentProb[j] = Math.log(startProb[j]) 
 								+ Math.log(sentiCountForGivenGroup)-Math.log(totalSentiDistro[j]);
 						
-						backLinkGroupID[0][j] = -5;
+						backLinkGroupID[j][0] = -5;
 					}
 					
 					maxValuedSS = getIndexOfMaxValuedSS(currentProb);
@@ -194,6 +209,24 @@ public class Driver {
 				currentGrpID = groupID_list.get(i);
 				if(currentGrpID ==-1){
 					// substitute distribution
+					
+					for(int j = 0; j < 5 ; j++){
+					
+						sentiCountForGivenGroup = unknownGroupDistro[j]*allReviewCount;
+							
+						for(int k = 0; k < 5; k++){
+							
+							tempProb[k] = Math.log(prevProb[k])
+									+ Math.log(transProb[k][j]) +
+									+ Math.log(sentiCountForGivenGroup) - 2*Math.log(totalSentiDistro[j]);
+						}
+						
+						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
+						backLinkGroupID[j][i] = maxValuedSS;
+						currentProb[j] = tempProb[maxValuedSS];
+					} // for j ends
+					prevProb = currentProb;
+					
 				}
 				else{
 					grpMeta = grpProc.groupMap.get(currentGrpID);
@@ -206,26 +239,43 @@ public class Driver {
 							
 						for(int k = 0; k < 5; k++){
 							
-							tempProb[k] = Math.log(currentProb[k     ])
+							tempProb[k] = Math.log(prevProb[k])
 									+ Math.log(transProb[k][j]) +
 									+ Math.log(sentiCountForGivenGroup) - 2*Math.log(totalSentiDistro[j]);
 						}
 						
 						maxValuedSS = getIndexOfMaxValuedSS(tempProb);
 						backLinkGroupID[j][i] = maxValuedSS;
-						prevProb[j] = tempProb[maxValuedSS];
+						currentProb[j] = tempProb[maxValuedSS];
 					} // for j ends
-					
+					prevProb = currentProb;
 				} // known group block ends
 			} 
 		} // all groups processed
 		
 		ArrayList<Integer>reverseList = new ArrayList<Integer>();
+
+		int nextMax;
+		for(int c = groupID_list.size()-1; c >= 0 ; c--){
+			
+			nextMax = backLinkGroupID[maxValuedSS][c];
+			reverseList.add(nextMax-2);
+			maxValuedSS = nextMax;
+		}
 		
-		return new ArrayList<Integer>();
+		int temp;
+		while(!groupID_list.isEmpty()){
+		
+			temp = groupID_list.get(groupID_list.size()-1);
+			prediction.add(temp);
+			groupID_list.remove(groupID_list.size()-1);
+		}
+		
+		System.out.println("Prediction.size() : " + prediction.size());
+		return prediction;
 	}
 	
-	public void readTestFileAndProcess(String filename){
+	public void readTestFileAndProcess(String test_filename){
 		
 		ArrayList<Integer> allPredictions = new ArrayList<Integer>();
 		List<String> words_list;
@@ -240,17 +290,17 @@ public class Driver {
 		
 		try{
 		
-			fr = new FileReader("DennisSchwartz_test.txt");
+			fr = new FileReader(test_filename);
 			br = new BufferedReader(fr); 
 			
 			while((s = br.readLine()) != null){ 
 			
 				if(s.length() == 0){
 					// predictSequence
-//					tempPredictionList = predictSequence(tempGroupIDList);
-//					for(int x : tempPredictionList)
-//						allPredictions.add(x);
-					tempGroupIDList = new ArrayList<Integer>();
+					tempPredictionList = predictSequence(tempGroupIDList);
+					for(int x : tempPredictionList)
+						allPredictions.add(x);
+//					tempGroupIDList = new ArrayList<Integer>();
 					continue;
 				}
 				
@@ -297,6 +347,12 @@ public class Driver {
 //					words_list = lemmatizer.lemmatize(s);
 				}
 			}
+			
+			//Write whole allPredictions to o/p file 
+			FileWriter fw = new FileWriter("hompm.txt");
+			for(int p : allPredictions)
+				fw.write(p + "\n");
+			fw.close();
 		}
 		catch(Exception e){
 			e.printStackTrace();
@@ -319,9 +375,14 @@ public class Driver {
 
 		Driver driver = new Driver();
 //		driver.readTrainingFile("sample.txt");
-		driver.readTrainingFile("DennisSchwartz_train.txt");
-		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+//		driver.readTrainingFile("DennisSchwartz_train.txt");
+//		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+		
+		driver.readTrainingFile("hmm_train.txt");
+		driver.readTestFileAndProcess("hmm_test.txt");
+
 		System.out.println("\n");
+		
 		driver.grpProc.printGroupMap();
 
 //		Preprocessor.printSentiDistroByWord();
@@ -329,7 +390,7 @@ public class Driver {
 //		Preprocessor.printLengthDistroBySentiment();
 //		Preprocessor.printPOSDistroBySentiment();
 //		Preprocessor.printSentiDistroByRating();
-		//driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+//		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
 	}
 
 }
