@@ -1,3 +1,7 @@
+'''
+    Maximum Entropy Markov Model
+    Authors: Herat Gandhi, Prashant Makwana, Mohnish Gorasia, Rushabh Mehta, Prashama Patil, Radhika Kulkarni
+'''
 import fileinput
 import re
 import nltk
@@ -10,7 +14,6 @@ pred_sent = 0
 '''
     Remove junk content that is numbers and stopwords from the string
     @param string1: string from which we want to remove junk
-    @param lines1: lines from which we want to ignore words
     @return: Clean string with no junk parts
 '''
 def remove_junk(string1):
@@ -20,9 +23,24 @@ def remove_junk(string1):
     return ' '.join(important_words)
 
 '''
+    Get feature value
+    @param string1: string for which we need feature value
+    @return: Total feature weight value
+'''
+def get_feature_value(string1):
+    tagged = nltk.pos_tag(nltk.word_tokenize(string1))
+    total = 0
+    for tagged_d in tagged:
+        if 'JJ' in tagged_d[1] or 'RB' in tagged_d[1]:
+            total += 10
+        else:
+            total += 1
+    return total
+
+'''
     Get bag of senses for a list of words
     @param temp_words1: Words for which we want to find bag of senses
-    @return definitions: Definitions of context words also include hypernyms and hyponyms
+    @return: Sentence with lemmatized words
 '''
 def get_bag_of_senses(temp_words):
     senses = []
@@ -39,6 +57,11 @@ def get_bag_of_senses(temp_words):
             pass
     return ' '.join(senses)
 
+'''
+    Map line to buckets for training
+    @param sentence1: Map given sentence to the present buckets
+    @return: Key to which sentence is mapped otherwise if not mapped then empty string
+'''
 def map_lines(sentence1):
     global train_dict
     
@@ -61,6 +84,11 @@ def map_lines(sentence1):
         return sentence1+' '+max_key
     return ''
 
+'''
+    Map line to buckets for testing
+    @param str1: Sentence which we want to map
+    @return: Key with which we have found the match
+'''
 def find_max_match_from_dict(str1):
     global train_dict
     max_cnt = 0
@@ -73,7 +101,14 @@ def find_max_match_from_dict(str1):
             max_key = k
     #print(max_key)
     return max_key
-    
+
+'''
+    Find the memm probability from the equations
+    @param line: Sentence which we are considering
+    @param prev_sent: Previous setiment value
+    @param state: The state which we are considering
+    @return: state which we predicted from the equations
+'''    
 def memm_prob(line,prev_sent,state):
     global train_dict
     global pred_sent
@@ -84,6 +119,7 @@ def memm_prob(line,prev_sent,state):
         #print(train_dict[key][int(state)])
         max = 0
         max_i = 0
+        w = get_feature_value(line)
         for i in range(-3,3):
             for j in range(-3,3):
                 if train_dict[key][i][j] > max:
@@ -149,7 +185,6 @@ def main():
             line = line.replace('>','')
             
             if new_review:
-                #print(backpointer)
                 new_review = False
                 viterbi = dict()
                 backpointer = dict()
@@ -165,22 +200,11 @@ def main():
                 viterbi[(line_no,0)] = viterbi[(line_no-1,0)] * memm_prob(line,prev_sent,0)
                 viterbi[(line_no,1)] = viterbi[(line_no-1,1)] * memm_prob(line,prev_sent,1)
                 viterbi[(line_no,2)] = viterbi[(line_no-1,2)] * memm_prob(line,prev_sent,2)
-                #print(viterbi[(line_no,-2)],viterbi[(line_no,-1)],viterbi[(line_no,0)],viterbi[(line_no,1)],viterbi[(line_no,2)])
                 
-                backpointer[line_no] = pred_sent #max(viterbi[(line_no,-2)],viterbi[(line_no,-1)],viterbi[(line_no,0)],viterbi[(line_no,1)],viterbi[(line_no,2)])
+                backpointer[line_no] = pred_sent
                 print(pred_sent)
                 op.write(str(pred_sent)+'\n')
-                '''if backpointer[line_no] == viterbi[(line_no,-2)]:
-                    backpointer[line_no] = -2
-                elif backpointer[line_no] == viterbi[(line_no,-1)]:
-                    backpointer[line_no] = -1
-                elif backpointer[line_no] == viterbi[(line_no,0)]:
-                    backpointer[line_no] = 0
-                elif backpointer[line_no] == viterbi[(line_no,1)]:
-                    backpointer[line_no] = 1
-                elif backpointer[line_no] == viterbi[(line_no,1)]:
-                    backpointer[line_no] = 2'''    
-    
+                
             line_no += 1
         else:
             new_review = True  
