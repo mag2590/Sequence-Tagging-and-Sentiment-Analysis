@@ -105,7 +105,7 @@ public class GroupProcessing {
 				}
 			}
 			
-			if(maxSize > 2){
+			if(maxSize > 5){
 				found = true;
 				grpMeta = groupMap.get(mappedGroup);
 				grpMeta.count++;

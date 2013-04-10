@@ -197,13 +197,26 @@ public class Preprocessor {
 		for(int j = 0 ; j < numGroups; j++){
 			
 			currentGrpID = groupID_list.get(j);
-			grpMeta = grpProc.groupMap.get(currentGrpID);
-			count = grpMeta.count;
 			
-			for(int i = 0 ; i < 5 ; i++){		
+			if(!grpProc.groupMap.containsKey(currentGrpID)){
 				
-				emissionProb[i][j] = ((double)grpMeta.sentiFV.get(i-2))/count;
+				for(int i = 0 ; i < 5 ; i++){	
+					emissionProb[i][j] = Double.MIN_VALUE;
+				}
 			}
+			
+			else{
+				grpMeta = grpProc.groupMap.get(currentGrpID);
+				count = grpMeta.count;
+				
+				for(int i = 0 ; i < 5 ; i++){		
+					
+					if(grpMeta.sentiFV.containsKey(i-2))
+						emissionProb[i][j] = ((double)grpMeta.sentiFV.get(i-2))/count;
+					else
+						emissionProb[i][j] = Double.MIN_VALUE;
+				}
+			}			
 		}
 		
 		return emissionProb;

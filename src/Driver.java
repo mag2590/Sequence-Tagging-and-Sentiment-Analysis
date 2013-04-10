@@ -133,11 +133,23 @@ public class Driver {
 			fw1.close();
 			startProb = preproc.setStartProbabilities();
 			transProb = preproc.setTransitionProbability();
+			System.out.println("Start probabilities : ");
+			printArray(startProb);
+			
 		}
 		catch(Exception e)
 		{e.printStackTrace();}
 	}
 
+	public void printArray(double[] arr){
+		
+		StringBuffer sb = new StringBuffer();
+		for(double d : arr)
+			sb.append(d + ", ");
+		
+		System.out.println(sb.toString());
+	}
+	
 	public int getIndexOfMaxValuedSS(double[] array){
 		int index = -1;
 		
@@ -149,10 +161,17 @@ public class Driver {
 				index = i;
 			}
 		}
+		
+		if(index==-1){
+			return 0;
+		}
+	
 		return index;
 	}
 	
 	public ArrayList<Integer> predictSequence(ArrayList<Integer> groupID_list){
+		
+//		System.out.println("groupID_list : " + groupID_list);
 		
 		ArrayList<Integer> prediction = new ArrayList<Integer>();
 		int[][] backLinkGroupID = new int[5][groupID_list.size()];
@@ -259,19 +278,21 @@ public class Driver {
 		for(int c = groupID_list.size()-1; c >= 0 ; c--){
 			
 			nextMax = backLinkGroupID[maxValuedSS][c];
-			reverseList.add(nextMax-2);
+//			System.out.println("nextMax" + nextMax);
+			if(nextMax==-5) nextMax = 0;
+			reverseList.add(nextMax);
 			maxValuedSS = nextMax;
 		}
 		
 		int temp;
-		while(!groupID_list.isEmpty()){
+		while(!reverseList.isEmpty()){
 		
-			temp = groupID_list.get(groupID_list.size()-1);
+			temp = reverseList.get(reverseList.size()-1);
 			prediction.add(temp);
-			groupID_list.remove(groupID_list.size()-1);
+			reverseList.remove(reverseList.size()-1);
 		}
 		
-		System.out.println("Prediction.size() : " + prediction.size());
+//		System.out.println("Prediction.size() : " + prediction.size());
 		return prediction;
 	}
 	
@@ -300,7 +321,7 @@ public class Driver {
 					tempPredictionList = predictSequence(tempGroupIDList);
 					for(int x : tempPredictionList)
 						allPredictions.add(x);
-//					tempGroupIDList = new ArrayList<Integer>();
+					tempGroupIDList = new ArrayList<Integer>();
 					continue;
 				}
 				
@@ -340,11 +361,10 @@ public class Driver {
 					words_list = lemmatizer.lemmatize(s);
 					swRemoved = preproc.removeStopwords(words_list);
 					current_groupID = grpProc.test_getGroupID(swRemoved);
-					if(current_groupID != -1){
+					if(current_groupID == -1){
 						unseenSentences++;
 					}
-//					currentGroupID = GroupProcessing.getOrCreateGroupIDFromSentence(s);
-//					words_list = lemmatizer.lemmatize(s);
+					tempGroupIDList.add(current_groupID);
 				}
 			}
 			
@@ -375,15 +395,15 @@ public class Driver {
 
 		Driver driver = new Driver();
 //		driver.readTrainingFile("sample.txt");
-//		driver.readTrainingFile("DennisSchwartz_train.txt");
-//		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
+		driver.readTrainingFile("DennisSchwartz_train.txt");
+		driver.readTestFileAndProcess("DennisSchwartz_test.txt");
 		
-		driver.readTrainingFile("hmm_train.txt");
-		driver.readTestFileAndProcess("hmm_test.txt");
+//		driver.readTrainingFile("hmm_train.txt");
+//		driver.readTestFileAndProcess("hmm_test.txt");
 
 		System.out.println("\n");
 		
-		driver.grpProc.printGroupMap();
+//		driver.grpProc.printGroupMap();
 
 //		Preprocessor.printSentiDistroByWord();
 //		Preprocessor.printSentiTransition();
