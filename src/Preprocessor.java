@@ -157,10 +157,13 @@ public class Preprocessor {
 			sum += sentiTransition[6][i];
 		}
 		
+		StringBuffer sb = new StringBuffer();
 		for(int j = 0; j < 5; j++){
 			startProb[j] = ((double)(sentiTransition[6][j]))/sum;
-		}
+			sb.append(startProb[j] + "\t");
+		}		
 		
+		System.out.println("Start probabilities : " + sb.toString());
 		return startProb;
 	}
 	
@@ -374,7 +377,7 @@ public class Preprocessor {
 		
 		try{
 			
-			fw = new FileWriter("word_senti_smartAnalysis.txt");
+			fw = new FileWriter("smartAnalysis_Scott.txt");
 			
 			while(itr.hasNext()){
 				
@@ -455,7 +458,7 @@ public class Preprocessor {
 		
 		try{
 			
-			fw = new FileWriter("rating_senti_analysis.txt");
+			fw = new FileWriter("rating_senti_analysis_Scott.txt");
 			
 			while(itr.hasNext()){
 				
